@@ -3,191 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trắc nghiệm Toán 9 - Phương trình bậc hai</title>
+
+<title>Đấu Trường Toán 9 - Bài 1</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script>
 window.MathJax = {
-    tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-    }
+tex: {
+inlineMath: [['$', '$'], ['\\(', '\\)']],
+displayMath: [['$$', '$$']]
+}
 };
 </script>
-<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script async
+src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
 
 <style>
+
 body{
-    font-family: sans-serif;
-    background: linear-gradient(135deg,#f0f9ff,#e0f2fe);
+font-family: Arial;
+background: linear-gradient(135deg,#e0f2fe,#f0f9ff);
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
-.option-btn{
-    border:2px solid #e2e8f0;
-    transition:0.2s;
+
+.card{
+background:white;
+padding:30px;
+border-radius:15px;
+max-width:600px;
+width:100%;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
 }
-.option-btn:hover{
-    border-color:#3b82f6;
-    background:#eff6ff;
+
+button{
+background:#2563eb;
+color:white;
+padding:12px;
+border-radius:10px;
+width:100%;
+margin-top:10px;
 }
-.correct{border-color:#22c55e!important;background:#f0fdf4!important;}
-.wrong{border-color:#ef4444!important;background:#fef2f2!important;}
+
+input{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+margin-top:5px;
+margin-bottom:10px;
+}
+
+.option{
+border:1px solid #ccc;
+padding:10px;
+margin-top:8px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.option:hover{
+background:#eff6ff;
+}
+
+.correct{
+background:#bbf7d0;
+}
+
+.wrong{
+background:#fecaca;
+}
+
 </style>
+
 </head>
 
-<body class="p-6 flex justify-center">
+<body>
 
-<div id="app" class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-xl"></div>
+<div class="card" id="app"></div>
 
 <script>
 
-const state = {
-screen:'start',
-current:0,
-score:0,
-time:20,
-timer:null,
-answered:false,
-questions:[
-{
-q:"Phương trình nào là phương trình bậc hai một ẩn?",
-options:["$x+2=0$","$x^2-5x+6=0$","$x^3-1=0$","$0x^2+3x-1=0$"],
-correct:1,
-explain:"Dạng $ax^2+bx+c=0$ với $a\\ne0$."
-},
-{
-q:"Nghiệm của $x^2-9=0$ là:",
-options:["$3$","$-3$","$\\pm3$","$9$"],
-correct:2,
-explain:"$x^2=9 \\Rightarrow x=\\pm3$."
-}
-]
+let state={
+screen:"start",
+name:"",
+class:"",
+question:0,
+score:0
 };
 
-const app=document.getElementById("app");
+let questions=[
+
+{
+q:"Phương trình nào là phương trình bậc hai?",
+options:[
+"x+1=0",
+"x²−5x+6=0",
+"x³−2=0",
+"3x−1=0"
+],
+correct:1
+},
+
+{
+q:"Nghiệm của x²=9 là:",
+options:[
+"x=3",
+"x=-3",
+"x=±3",
+"x=9"
+],
+correct:2
+}
+
+];
 
 function render(){
+
 if(state.screen==="start"){
+
 app.innerHTML=`
-<h1 class="text-3xl font-bold text-blue-600 mb-6 text-center">
+
+<h2 style="text-align:center;font-size:28px;margin-bottom:20px">
 Đấu Trường Toán 9
-</h1>
-<button onclick="startQuiz()" class="w-full bg-blue-500 text-white py-3 rounded-xl font-bold">
+</h2>
+
+<label>Họ và tên</label>
+<input id="name">
+
+<label>Lớp</label>
+<input id="class">
+
+<button onclick="startQuiz()">
 Bắt đầu
 </button>
+
 `;
+
 }
 
 if(state.screen==="quiz"){
-const q=state.questions[state.current];
+
+let q=questions[state.question];
+
 app.innerHTML=`
-<div class="flex justify-between mb-4">
-<span>Câu ${state.current+1}/${state.questions.length}</span>
-<span>${state.time}s</span>
-</div>
 
-<h2 class="mb-6 font-semibold">${q.q}</h2>
+<h3>Câu ${state.question+1}</h3>
 
-<div class="space-y-3">
-${q.options.map((o,i)=>`
-<button onclick="check(${i})" 
-class="option-btn w-full p-3 rounded-xl text-left"
-id="opt${i}">
-${o}
-</button>
-`).join("")}
-</div>
+<p>${q.q}</p>
 
-<div id="feedback" class="mt-6 hidden">
-<p id="fbText" class="font-bold mb-3"></p>
-<p class="text-blue-600">${q.explain}</p>
-<button onclick="next()" class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-xl">
-Tiếp tục
-</button>
-</div>
+${q.options.map((opt,i)=>
+`<div class="option" onclick="check(${i})">
+${opt}
+</div>`
+).join("")}
+
 `;
+
 MathJax.typeset();
-startTimer();
+
 }
 
 if(state.screen==="result"){
+
 app.innerHTML=`
-<h2 class="text-3xl font-bold text-center mb-6">
-Điểm của bạn: ${state.score}/${state.questions.length}
-</h2>
-<button onclick="restart()" class="w-full bg-blue-500 text-white py-3 rounded-xl">
+
+<h2>Kết quả</h2>
+
+<p>${state.name} - ${state.class}</p>
+
+<h1>${state.score}/${questions.length}</h1>
+
+<button onclick="restart()">
 Làm lại
 </button>
+
 `;
+
 }
+
 }
 
 function startQuiz(){
+
+state.name=document.getElementById("name").value;
+
+state.class=document.getElementById("class").value;
+
+if(state.name==""||state.class==""){
+alert("Nhập đủ thông tin");
+return;
+}
+
 state.screen="quiz";
-state.current=0;
-state.score=0;
+
 render();
-}
 
-function startTimer(){
-state.time=20;
-clearInterval(state.timer);
-state.timer=setInterval(()=>{
-state.time--;
-renderTime();
-if(state.time<=0){
-clearInterval(state.timer);
-check(-1);
-}
-},1000);
-}
-
-function renderTime(){
-const spans=app.querySelectorAll("span");
-if(spans[1]) spans[1].innerText=state.time+"s";
 }
 
 function check(i){
-if(state.answered) return;
-state.answered=true;
-clearInterval(state.timer);
 
-const q=state.questions[state.current];
-const feedback=document.getElementById("feedback");
-const fbText=document.getElementById("fbText");
-
-feedback.classList.remove("hidden");
-
-if(i===q.correct){
+if(i==questions[state.question].correct)
 state.score++;
-document.getElementById("opt"+i).classList.add("correct");
-fbText.innerText="Chính xác!";
-fbText.className="text-green-600 font-bold mb-3";
+
+state.question++;
+
+if(state.question>=questions.length){
+
+state.screen="result";
+
 }else{
-if(i!=-1) document.getElementById("opt"+i).classList.add("wrong");
-fbText.innerText="Chưa đúng!";
-fbText.className="text-red-600 font-bold mb-3";
-}
+
+state.screen="quiz";
+
 }
 
-function next(){
-state.answered=false;
-if(state.current<state.questions.length-1){
-state.current++;
 render();
-}else{
-state.screen="result";
-render();
-}
+
 }
 
 function restart(){
-state.screen="start";
+
+state={
+screen:"start",
+name:"",
+class:"",
+question:0,
+score:0
+};
+
 render();
+
 }
 
 render();
 
 </script>
+
 </body>
 </html>
