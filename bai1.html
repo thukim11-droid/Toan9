@@ -4,227 +4,355 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Đấu Trường Toán 9 - Bài 1</title>
+<title>Đấu Trường Toán 9</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-<script>
-window.MathJax = {
-tex: {
-inlineMath: [['$', '$'], ['\\(', '\\)']],
-displayMath: [['$$', '$$']]
+<!-- MATHJAX giữ công thức đẹp -->
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+
+body{
+font-family: Inter;
+background: linear-gradient(135deg,#cfd9df,#e2ebf0);
+display:flex;
+justify-content:center;
+padding:30px;
 }
-};
-</script>
 
-<script async
-src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-</script>
+.container{
+background:white;
+padding:30px;
+border-radius:20px;
+width:700px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
 
+.title{
+text-align:center;
+color:#2563eb;
+font-size:32px;
+font-weight:700;
+}
+
+.subtitle{
+text-align:center;
+color:#6b7280;
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin:8px 0;
+border-radius:10px;
+border:1px solid #ccc;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:15px;
+border:none;
+border-radius:12px;
+font-size:18px;
+font-weight:600;
+cursor:pointer;
+}
+
+.start-btn{
+background:#3b82f6;
+color:white;
+}
+
+.next-btn{
+background:#3b82f6;
+color:white;
+}
+
+.option{
+border:2px solid #e5e7eb;
+padding:12px;
+border-radius:12px;
+margin:10px 0;
+cursor:pointer;
+}
+
+.option:hover{
+background:#eff6ff;
+}
+
+.correct{
+border-color:#22c55e;
+background:#dcfce7;
+}
+
+.wrong{
+border-color:#ef4444;
+background:#fee2e2;
+}
+
+.timer{
+color:#f97316;
+font-weight:600;
+float:right;
+}
+
+.result{
+text-align:center;
+font-size:40px;
+color:#2563eb;
+font-weight:bold;
+}
+
+.hidden{
+display:none;
+}
+
+.feedback{
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+font-weight:600;
+}
+
+.feedback.correct{
+background:#dcfce7;
+color:#166534;
+}
+
+.feedback.wrong{
+background:#fee2e2;
+color:#991b1b;
+}
+
+</style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+<body>
 
-<div id="app" class="w-full max-w-xl"></div>
+<div class="container">
+
+<div id="startScreen">
+
+<div class="title">📐 Đấu Trường Toán 9</div>
+<div class="subtitle">Phương trình bậc hai & Vi-ét</div>
+
+<input id="name" placeholder="Họ và tên">
+<input id="class" placeholder="Lớp">
+
+<button class="start-btn" onclick="startQuiz()">Bắt đầu thi</button>
+
+</div>
+
+
+<div id="quizScreen" class="hidden">
+
+<div>
+<span id="questionNumber"></span>
+<span class="timer" id="timer"></span>
+</div>
+
+<div id="questionText" style="margin-top:20px;font-size:20px;"></div>
+
+<div id="options"></div>
+
+<div id="feedback"></div>
+
+<button class="next-btn hidden" id="nextBtn" onclick="nextQuestion()">Tiếp tục câu sau</button>
+
+</div>
+
+
+<div id="resultScreen" class="hidden">
+
+<div class="title">Kết quả cuối cùng</div>
+
+<div id="studentInfo"></div>
+
+<div class="result" id="score"></div>
+
+<button onclick="location.reload()">Thử lại</button>
+
+</div>
+
+</div>
+
 
 <script>
 
-let state={
-screen:"start",
-name:"",
-class:"",
-question:0,
-score:0
-};
-
-let questions=[
+const questions = [
 
 {
-q:"Phương trình nào là phương trình bậc hai?",
+question:"Nghiệm của \\(x^2=9\\) là:",
 options:[
-"x+1=0",
-"$x^2-5x+6=0$",
-"$x^3-2=0$",
-"$3x-1=0$"
+"\\(x=3\\)",
+"\\(x=-3\\)",
+"\\(x=\\pm3\\)",
+"\\(x=9\\)"
 ],
-correct:1
+correct:2
 },
 
 {
-q:"Nghiệm của $x^2=9$ là:",
+question:"Phương trình bậc hai là:",
 options:[
-"$x=3$",
-"$x=-3$",
-"$x=\\pm3$",
-"$x=9$"
+"\\(x+1=0\\)",
+"\\(x^2+2x+1=0\\)",
+"\\(x^3=0\\)",
+"\\(2x=0\\)"
 ],
-correct:2
+correct:1
 }
 
 ];
 
-function render(){
 
-if(state.screen==="start"){
+let current=0;
+let score=0;
+let timer;
+let timeLeft=20;
 
-app.innerHTML=`
+function startQuiz(){
 
-<div class="bg-white p-8 rounded-2xl shadow-xl text-center">
+document.getElementById("startScreen").classList.add("hidden");
+document.getElementById("quizScreen").classList.remove("hidden");
 
-<div class="text-5xl mb-4">📐✏️🍎</div>
-
-<h1 class="text-3xl font-bold text-blue-600 mb-2">
-Đấu Trường Toán 9
-</h1>
-
-<p class="text-gray-500 mb-6">
-Phương trình bậc hai & Hệ thức Vi-ét
-</p>
-
-<div class="text-left">
-
-<label class="font-semibold">Họ và Tên</label>
-<input id="name"
-class="w-full border rounded-xl p-3 mt-1 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-placeholder="Nhập tên...">
-
-<label class="font-semibold">Lớp</label>
-<input id="class"
-class="w-full border rounded-xl p-3 mt-1 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-placeholder="Ví dụ: 9A...">
-
-<button onclick="startQuiz()"
-class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition">
-Bắt đầu thi!
-</button>
-
-</div>
-
-</div>
-
-`;
+showQuestion();
 
 }
 
-if(state.screen==="quiz"){
 
-let q=questions[state.question];
+function showQuestion(){
 
-app.innerHTML=`
+clearInterval(timer);
 
-<div class="bg-white p-8 rounded-2xl shadow-xl">
+timeLeft=20;
 
-<h2 class="text-xl font-bold mb-4 text-blue-600">
-Câu ${state.question+1}/${questions.length}
-</h2>
+timer=setInterval(()=>{
 
-<div class="text-lg mb-4">
-${q.q}
-</div>
+timeLeft--;
+document.getElementById("timer").innerText="Hạn định: "+timeLeft+"s";
 
-<div class="space-y-3">
+if(timeLeft<=0){
 
-${q.options.map((opt,i)=>
+clearInterval(timer);
+showFeedback(false,true);
 
-`<div onclick="check(${i})"
-class="border rounded-xl p-3 cursor-pointer hover:bg-blue-100 transition">
-${opt}
-</div>`
+}
 
-).join("")}
+},1000);
 
-</div>
+document.getElementById("questionNumber").innerText=
+"Câu "+(current+1)+"/"+questions.length;
 
-</div>
+document.getElementById("questionText").innerHTML=
+questions[current].question;
 
-`;
+const optionsDiv=document.getElementById("options");
+
+optionsDiv.innerHTML="";
+
+questions[current].options.forEach((opt,index)=>{
+
+const div=document.createElement("div");
+
+div.className="option";
+
+div.innerHTML=opt;
+
+div.onclick=()=>checkAnswer(index,div);
+
+optionsDiv.appendChild(div);
+
+});
 
 MathJax.typeset();
 
 }
 
-if(state.screen==="result"){
 
-app.innerHTML=`
+function checkAnswer(index,element){
 
-<div class="bg-white p-8 rounded-2xl shadow-xl text-center">
+clearInterval(timer);
 
-<h2 class="text-2xl font-bold text-blue-600 mb-3">
-Kết quả
-</h2>
+const correctIndex=questions[current].correct;
 
-<p class="mb-2">
-${state.name} - ${state.class}
-</p>
+const options=document.querySelectorAll(".option");
 
-<div class="text-5xl font-bold text-green-500 mb-4">
-${state.score}/${questions.length}
-</div>
+options.forEach(opt=>opt.onclick=null);
 
-<button onclick="restart()"
-class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl">
-Làm lại
-</button>
+if(index===correctIndex){
 
-</div>
-
-`;
-
-}
-
-}
-
-function startQuiz(){
-
-state.name=document.getElementById("name").value;
-state.class=document.getElementById("class").value;
-
-if(state.name==""||state.class==""){
-alert("Nhập đủ thông tin");
-return;
-}
-
-state.screen="quiz";
-render();
-
-}
-
-function check(i){
-
-if(i==questions[state.question].correct)
-state.score++;
-
-state.question++;
-
-if(state.question>=questions.length){
-
-state.screen="result";
+element.classList.add("correct");
+score++;
+showFeedback(true,false);
 
 }else{
 
-state.screen="quiz";
+element.classList.add("wrong");
+options[correctIndex].classList.add("correct");
+showFeedback(false,false);
 
 }
 
-render();
+}
+
+
+function showFeedback(isCorrect,isTimeout){
+
+const feedback=document.getElementById("feedback");
+
+feedback.className="feedback "+(isCorrect?"correct":"wrong");
+
+if(isTimeout)
+feedback.innerText="Hết thời gian!";
+else
+feedback.innerText=isCorrect?"Chính xác!":"Chưa đúng!";
+
+document.getElementById("nextBtn").classList.remove("hidden");
 
 }
 
-function restart(){
 
-state={
-screen:"start",
-name:"",
-class:"",
-question:0,
-score:0
-};
+function nextQuestion(){
 
-render();
+current++;
+
+if(current>=questions.length){
+
+showResult();
+
+return;
 
 }
 
-render();
+document.getElementById("feedback").innerHTML="";
+document.getElementById("nextBtn").classList.add("hidden");
+
+showQuestion();
+
+}
+
+
+function showResult(){
+
+document.getElementById("quizScreen").classList.add("hidden");
+document.getElementById("resultScreen").classList.remove("hidden");
+
+document.getElementById("studentInfo").innerText=
+"Học sinh: "+
+document.getElementById("name").value+
+" - Lớp "+
+document.getElementById("class").value;
+
+document.getElementById("score").innerText=
+score+"/"+questions.length;
+
+}
 
 </script>
 
