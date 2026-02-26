@@ -21,75 +21,13 @@ displayMath: [['$$', '$$']]
 src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
 </script>
 
-<style>
-
-body{
-font-family: Arial;
-background: linear-gradient(135deg,#e0f2fe,#f0f9ff);
-min-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-.card{
-background:white;
-padding:30px;
-border-radius:15px;
-max-width:600px;
-width:100%;
-box-shadow:0 5px 20px rgba(0,0,0,0.1);
-}
-
-button{
-background:#2563eb;
-color:white;
-padding:12px;
-border-radius:10px;
-width:100%;
-margin-top:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-border-radius:8px;
-border:1px solid #ccc;
-margin-top:5px;
-margin-bottom:10px;
-}
-
-.option{
-border:1px solid #ccc;
-padding:10px;
-margin-top:8px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.option:hover{
-background:#eff6ff;
-}
-
-.correct{
-background:#bbf7d0;
-}
-
-.wrong{
-background:#fecaca;
-}
-
-</style>
-
 </head>
 
-<body>
+<body class="min-h-screen bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
 
-<div class="card" id="app"></div>
+<div id="app" class="w-full max-w-xl"></div>
 
 <script>
-
-let app = document.getElementById("app"); // ✅ THÊM DÒNG NÀY (QUAN TRỌNG)
 
 let state={
 screen:"start",
@@ -105,20 +43,20 @@ let questions=[
 q:"Phương trình nào là phương trình bậc hai?",
 options:[
 "x+1=0",
-"x²−5x+6=0",
-"x³−2=0",
-"3x−1=0"
+"$x^2-5x+6=0$",
+"$x^3-2=0$",
+"$3x-1=0$"
 ],
 correct:1
 },
 
 {
-q:"Nghiệm của x²=9 là:",
+q:"Nghiệm của $x^2=9$ là:",
 options:[
-"x=3",
-"x=-3",
-"x=±3",
-"x=9"
+"$x=3$",
+"$x=-3$",
+"$x=\\pm3$",
+"$x=9$"
 ],
 correct:2
 }
@@ -131,19 +69,38 @@ if(state.screen==="start"){
 
 app.innerHTML=`
 
-<h2 style="text-align:center;font-size:28px;margin-bottom:20px">
+<div class="bg-white p-8 rounded-2xl shadow-xl text-center">
+
+<div class="text-5xl mb-4">📐✏️🍎</div>
+
+<h1 class="text-3xl font-bold text-blue-600 mb-2">
 Đấu Trường Toán 9
-</h2>
+</h1>
 
-<label>Họ và tên</label>
-<input id="name">
+<p class="text-gray-500 mb-6">
+Phương trình bậc hai & Hệ thức Vi-ét
+</p>
 
-<label>Lớp</label>
-<input id="class">
+<div class="text-left">
 
-<button onclick="startQuiz()">
-Bắt đầu
+<label class="font-semibold">Họ và Tên</label>
+<input id="name"
+class="w-full border rounded-xl p-3 mt-1 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+placeholder="Nhập tên...">
+
+<label class="font-semibold">Lớp</label>
+<input id="class"
+class="w-full border rounded-xl p-3 mt-1 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+placeholder="Ví dụ: 9A...">
+
+<button onclick="startQuiz()"
+class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition">
+Bắt đầu thi!
 </button>
+
+</div>
+
+</div>
 
 `;
 
@@ -155,15 +112,30 @@ let q=questions[state.question];
 
 app.innerHTML=`
 
-<h3>Câu ${state.question+1}</h3>
+<div class="bg-white p-8 rounded-2xl shadow-xl">
 
-<p>${q.q}</p>
+<h2 class="text-xl font-bold mb-4 text-blue-600">
+Câu ${state.question+1}/${questions.length}
+</h2>
+
+<div class="text-lg mb-4">
+${q.q}
+</div>
+
+<div class="space-y-3">
 
 ${q.options.map((opt,i)=>
-`<div class="option" onclick="check(${i})">
+
+`<div onclick="check(${i})"
+class="border rounded-xl p-3 cursor-pointer hover:bg-blue-100 transition">
 ${opt}
 </div>`
+
 ).join("")}
+
+</div>
+
+</div>
 
 `;
 
@@ -175,15 +147,26 @@ if(state.screen==="result"){
 
 app.innerHTML=`
 
-<h2>Kết quả</h2>
+<div class="bg-white p-8 rounded-2xl shadow-xl text-center">
 
-<p>${state.name} - ${state.class}</p>
+<h2 class="text-2xl font-bold text-blue-600 mb-3">
+Kết quả
+</h2>
 
-<h1>${state.score}/${questions.length}</h1>
+<p class="mb-2">
+${state.name} - ${state.class}
+</p>
 
-<button onclick="restart()">
+<div class="text-5xl font-bold text-green-500 mb-4">
+${state.score}/${questions.length}
+</div>
+
+<button onclick="restart()"
+class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl">
 Làm lại
 </button>
+
+</div>
 
 `;
 
@@ -194,7 +177,6 @@ Làm lại
 function startQuiz(){
 
 state.name=document.getElementById("name").value;
-
 state.class=document.getElementById("class").value;
 
 if(state.name==""||state.class==""){
@@ -203,7 +185,6 @@ return;
 }
 
 state.screen="quiz";
-
 render();
 
 }
