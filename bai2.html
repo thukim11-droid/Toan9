@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc nghiệm Toán 9 - Phương trình bậc hai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0f9ff;
+            color: #1e293b;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-option {
+            transition: all 0.2s;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-option:hover:not(:disabled) {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            transform: translateY(-2px);
+        }
+        .btn-option.correct {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+            color: #15803d;
+        }
+        .btn-option.wrong {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c;
+        }
+        .progress-bar {
+            transition: width 0.5s ease-out;
+        }
+        .timer-low {
+            color: #ef4444;
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-2xl">
+        <!-- Màn hình chào mừng -->
+        <div id="start-screen" class="card p-8 text-center">
+            <div class="mb-6 flex justify-center">
+                <svg width="150" height="150" viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="80" fill="#bae6fd" />
+                    <circle cx="70" cy="80" r="10" fill="white" />
+                    <circle cx="70" cy="80" r="5" fill="black" />
+                    <circle cx="130" cy="80" r="10" fill="white" />
+                    <circle cx="130" cy="80" r="5" fill="black" />
+                    <path d="M70 130 Q100 160 130 130" stroke="#0ea5e9" stroke-width="8" fill="none" stroke-linecap="round" />
+                    <rect x="80" y="30" width="40" height="10" rx="5" fill="#0ea5e9" />
+                    <text x="160" y="60" font-size="30" transform="rotate(20)">Σ</text>
+                    <text x="20" y="50" font-size="25" transform="rotate(-15)">x²</text>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">Đấu Trường Toán Học 9</h1>
+            <p class="text-slate-500 mb-8">Chủ đề: Phương trình bậc hai & Định lý Viète</p>
+            
+            <div class="space-y-4 max-w-sm mx-auto">
+                <input type="text" id="user-name" placeholder="Nhập tên của bạn..." class="w-full px-4 py-3 rounded-xl border-2 border-blue-100 focus:border-blue-400 outline-none transition">
+                <input type="text" id="user-class" placeholder="Nhập lớp (VD: 9A1)..." class="w-full px-4 py-3 rounded-xl border-2 border-blue-100 focus:border-blue-400 outline-none transition">
+                <button id="btn-start" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:scale-105">BẮT ĐẦU CHƠI</button>
+            </div>
+        </div>
+
+        <!-- Màn hình câu hỏi -->
+        <div id="quiz-screen" class="card p-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-sm font-semibold text-slate-500">Câu hỏi <span id="current-idx">1</span>/10</div>
+                <div id="timer" class="text-xl font-bold text-blue-500">40s</div>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full mb-6 overflow-hidden">
+                <div id="progress" class="progress-bar bg-blue-400 h-full w-0"></div>
+            </div>
+
+            <div id="question-text" class="text-xl font-bold mb-6 min-h-[80px]">Đang tải câu hỏi...</div>
+
+            <div id="options-container" class="grid gap-3 mb-6"></div>
+
+            <div id="feedback" class="hidden p-4 rounded-xl mb-4 transition-all">
+                <p id="feedback-msg" class="font-bold mb-1"></p>
+                <p id="explanation" class="text-sm italic"></p>
+            </div>
+
+            <button id="btn-next" class="hidden w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md transition">TIẾP THEO</button>
+        </div>
+
+        <!-- Màn hình kết thúc -->
+        <div id="end-screen" class="card p-8 text-center hidden">
+            <h2 class="text-3xl font-bold text-blue-600 mb-4">Hoàn thành!</h2>
+            <div class="bg-blue-50 py-6 rounded-2xl mb-6">
+                <div class="text-5xl font-bold text-blue-500 mb-2"><span id="final-score">0</span>/10</div>
+                <p id="result-comment" class="text-lg font-medium text-slate-700 px-4"></p>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="font-bold text-slate-600 mb-4 border-b pb-2">Bảng Xếp Hạng</h3>
+                <div class="max-h-60 overflow-y-auto px-2" id="leaderboard">
+                    <p class="text-slate-400 py-4">Đang tải bảng xếp hạng...</p>
+                </div>
+            </div>
+
+            <button id="btn-restart" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg transition">CHƠI LẠI</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'math-quiz-9-v3';
+
+        let user = null;
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+
+        onAuthStateChanged(auth, (u) => { user = u; });
+        initAuth();
+
+        const quizData = [
+            {
+                q: "Phương trình nào dưới đây là phương trình bậc hai một ẩn?",
+                options: ["2x + 1 = 0", "x² - 5x + 6 = 0", "x³ + x² - 1 = 0", "0x² + 3x - 2 = 0"],
+                correct: 1,
+                exp: "Phương trình bậc hai một ẩn có dạng ax² + bx + c = 0 với a ≠ 0."
+            },
+            {
+                q: "Tìm tập nghiệm của phương trình x² - 5x + 6 = 0.",
+                options: ["S = {1; 6}", "S = {2; 3}", "S = {-2; -3}", "S = {-1; -6}"],
+                correct: 1,
+                exp: "Ta có Δ = (-5)² - 4.1.6 = 1 > 0. Phương trình có hai nghiệm x₁ = 2, x₂ = 3."
+            },
+            {
+                q: "Cho phương trình 3x² - 8x + 4 = 0. Tổng hai nghiệm (x₁ + x₂) của phương trình là:",
+                options: ["8/3", "-8/3", "4/3", "8"],
+                correct: 0,
+                exp: "Theo định lý Viète: x₁ + x₂ = -b/a = -(-8)/3 = 8/3."
+            },
+            {
+                q: "Nhẩm nghiệm của phương trình 2x² - 3x + 1 = 0.",
+                options: ["x₁ = 1; x₂ = 2", "x₁ = 1; x₂ = 0.5", "x₁ = -1; x₂ = -0.5", "x₁ = 1; x₂ = -0.5"],
+                correct: 1,
+                exp: "Ta thấy a + b + c = 2 + (-3) + 1 = 0 nên x₁ = 1 và x₂ = c/a = 1/2 = 0.5."
+            },
+            {
+                q: "Một khu vườn hình chữ nhật có chiều dài hơn chiều rộng 5m và diện tích bằng 150m². Gọi x (m) là chiều rộng. Phương trình của bài toán là:",
+                options: ["x² + 5x + 150 = 0", "x² + 5x - 150 = 0", "x² - 5x - 150 = 0", "2x + 5 = 150"],
+                correct: 1,
+                exp: "Chiều dài là x + 5. Diện tích x(x + 5) = 150 => x² + 5x - 150 = 0."
+            },
+            {
+                q: "Tìm phương trình bậc hai nhận u = 9 và v = 10 làm nghiệm.",
+                options: ["x² + 19x + 90 = 0", "x² - 90x + 19 = 0", "x² - 19x + 90 = 0", "x² - 19x - 90 = 0"],
+                correct: 2,
+                exp: "Hai số u, v là nghiệm của phương trình x² - (u+v)x + uv = 0. Tức là x² - 19x + 90 = 0."
+            },
+            {
+                q: "Tìm hai số tự nhiên biết tổng của chúng bằng 12 và tích của chúng bằng 35.",
+                options: ["5 và 7", "4 và 8", "3 và 9", "6 và 6"],
+                correct: 0,
+                exp: "Hai số là nghiệm của t² - 12t + 35 = 0. Nghiệm là 5 và 7."
+            },
+            {
+                q: "Tích của hai số tự nhiên liên tiếp là 156. Gọi số bé là x (x ∈ N). Phương trình bậc hai mô tả bài toán này là:",
+                options: ["x² + x + 156 = 0", "x² + x - 156 = 0", "x² + 2x - 156 = 0", "2x² + x - 156 = 0"],
+                correct: 1,
+                exp: "Hai số liên tiếp là x và x + 1. Tích x(x + 1) = 156 => x² + x - 156 = 0."
+            },
+            {
+                q: "Điều kiện để phương trình ax² + bx + c = 0 (a ≠ 0) có hai nghiệm trái dấu là:",
+                options: ["Δ > 0", "a.c > 0", "a.c < 0", "b = 0"],
+                correct: 2,
+                exp: "Hai nghiệm trái dấu khi tích x₁.x₂ = c/a < 0, tương đương với a.c < 0."
+            },
+            {
+                q: "Cho phương trình x² - 4x + 1 = 0. Giá trị của biểu thức A = x₁² + x₂² là:",
+                options: ["14", "16", "18", "12"],
+                correct: 0,
+                exp: "A = (x₁+x₂)² - 2x₁x₂ = 4² - 2(1) = 16 - 2 = 14."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timerSeconds = 40;
+        let timerInterval = null;
+        let userName = "";
+        let userClass = "";
+
+        const $ = (id) => document.getElementById(id);
+
+        async function saveScore() {
+            if (!user) return;
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                await addDoc(colRef, {
+                    name: userName,
+                    className: userClass,
+                    score: score,
+                    timestamp: new Date().getTime()
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadLeaderboard() {
+            if (!user) return;
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                const snapshot = await getDocs(colRef);
+                const scores = [];
+                snapshot.forEach(doc => scores.push(doc.data()));
+                scores.sort((a, b) => b.score - a.score || b.timestamp - a.timestamp);
+
+                const container = $('leaderboard');
+                if (scores.length === 0) {
+                    container.innerHTML = `<p class="text-slate-400 py-4 text-sm">Chưa có bảng xếp hạng.</p>`;
+                    return;
+                }
+
+                container.innerHTML = scores.slice(0, 10).map((s, i) => `
+                    <div class="flex justify-between items-center p-2 mb-1 rounded bg-slate-50 border border-slate-100">
+                        <div class="flex items-center">
+                            <span class="w-6 h-6 flex items-center justify-center rounded-full ${i < 3 ? 'bg-yellow-400 text-white' : 'bg-slate-200'} text-xs font-bold mr-3">${i+1}</span>
+                            <div class="text-left">
+                                <div class="font-bold text-sm text-slate-700">${s.name}</div>
+                                <div class="text-[10px] text-slate-400">${s.className}</div>
+                            </div>
+                        </div>
+                        <div class="font-bold text-blue-600">${s.score}/10</div>
+                    </div>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        function startTimer() {
+            timerSeconds = 40;
+            updateTimerUI();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerUI();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer(-1);
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerEl = $('timer');
+            timerEl.innerText = `${timerSeconds}s`;
+            if (timerSeconds <= 10) timerEl.classList.add('timer-low');
+            else timerEl.classList.remove('timer-low');
+        }
+
+        function renderQuestion() {
+            const data = quizData[currentQuestion];
+            $('current-idx').innerText = currentQuestion + 1;
+            $('progress').style.width = `${((currentQuestion) / 10) * 100}%`;
+            $('question-text').innerText = data.q;
+            
+            const container = $('options-container');
+            container.innerHTML = '';
+            
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option w-full p-4 rounded-xl text-left font-semibold';
+                btn.innerText = opt; // Hiện tại dùng dấu chấm cho thập phân
+                btn.onclick = () => handleAnswer(idx);
+                container.appendChild(btn);
+            });
+
+            $('feedback').classList.add('hidden');
+            $('btn-next').classList.add('hidden');
+            startTimer();
+        }
+
+        function handleAnswer(selectedIdx) {
+            clearInterval(timerInterval);
+            const data = quizData[currentQuestion];
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const feedback = $('feedback');
+            const msg = $('feedback-msg');
+            const exp = $('explanation');
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === data.correct) {
+                score++;
+                if (selectedIdx !== -1) buttons[selectedIdx].classList.add('correct');
+                msg.innerText = "Chính xác!";
+                msg.className = "font-bold mb-1 text-green-600";
+                exp.innerText = data.exp;
+            } else {
+                if (selectedIdx !== -1) buttons[selectedIdx].classList.add('wrong');
+                msg.innerText = selectedIdx === -1 ? "Hết thời gian mất rồi!" : "Chưa đúng rồi!";
+                msg.className = "font-bold mb-1 text-red-500";
+                exp.innerText = "";
+            }
+            $('btn-next').classList.remove('hidden');
+        }
+
+        function showResult() {
+            $('quiz-screen').classList.add('hidden');
+            $('end-screen').classList.remove('hidden');
+            $('final-score').innerText = score;
+
+            let comment = "";
+            if (score === 10) comment = "Tuyệt vời! Bạn là bậc thầy Viète rồi đó! 🏆";
+            else if (score >= 8) comment = "Rất tốt! Kiến thức của bạn rất vững chắc. 🌟";
+            else if (score >= 5) comment = "Khá tốt! Hãy ôn luyện thêm để đạt điểm tối đa nhé. 👍";
+            else comment = "Đừng nản chí! Hãy xem lại các công thức và thử lại nào. 💪";
+            
+            $('result-comment').innerText = comment;
+            saveScore().then(loadLeaderboard);
+        }
+
+        $('btn-start').onclick = () => {
+            userName = $('user-name').value.trim();
+            userClass = $('user-class').value.trim();
+            if (!userName || !userClass) {
+                alert("Vui lòng nhập đầy đủ tên và lớp!");
+                return;
+            }
+            $('start-screen').classList.add('hidden');
+            $('quiz-screen').classList.remove('hidden');
+            currentQuestion = 0; score = 0;
+            renderQuestion();
+        };
+
+        $('btn-next').onclick = () => {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) renderQuestion();
+            else showResult();
+        };
+
+        $('btn-restart').onclick = () => {
+            $('end-screen').classList.add('hidden');
+            $('start-screen').classList.remove('hidden');
+        };
+    </script>
+</body>
+</html>
