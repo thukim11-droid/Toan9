@@ -54,7 +54,6 @@
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div id="app" class="w-full max-w-2xl">
-        <!-- Màn hình chào mừng -->
         <div id="start-screen" class="card p-8 text-center">
             <div class="mb-6 flex justify-center">
                 <svg width="150" height="150" viewBox="0 0 200 200">
@@ -79,7 +78,6 @@
             </div>
         </div>
 
-        <!-- Màn hình câu hỏi -->
         <div id="quiz-screen" class="card p-6 hidden">
             <div class="flex justify-between items-center mb-4">
                 <div class="text-sm font-semibold text-slate-500">Câu hỏi <span id="current-idx">1</span>/10</div>
@@ -101,7 +99,6 @@
             <button id="btn-next" class="hidden w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md transition">TIẾP THEO</button>
         </div>
 
-        <!-- Màn hình kết thúc -->
         <div id="end-screen" class="card p-8 text-center hidden">
             <h2 class="text-3xl font-bold text-blue-600 mb-4">Hoàn thành!</h2>
             <div class="bg-blue-50 py-6 rounded-2xl mb-6">
@@ -112,7 +109,7 @@
             <div class="mb-8">
                 <h3 class="font-bold text-slate-600 mb-4 border-b pb-2">Bảng Xếp Hạng</h3>
                 <div class="max-h-60 overflow-y-auto px-2" id="leaderboard">
-                    <p class="text-slate-400 py-4">Đang tải bảng xếp hạng...</p>
+                    <p class="text-slate-400 py-4">Chế độ chơi Offline (Không lưu điểm)</p>
                 </div>
             </div>
 
@@ -122,27 +119,30 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'math-quiz-9-v3';
-
+        // Cấu hình an toàn: Nếu không có config từ Canvas, ứng dụng vẫn chạy ở chế độ offline
+        const firebaseConfig = window.__firebase_config ? JSON.parse(window.__firebase_config) : null;
+        
+        let db = null;
+        let auth = null;
         let user = null;
+        let isOnline = false;
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        if (firebaseConfig && firebaseConfig.apiKey) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                signInAnonymously(auth).catch(e => console.log("Firebase Auth Error: Chạy chế độ Offline"));
+                onAuthStateChanged(auth, (u) => { user = u; isOnline = !!u; });
+            } catch (e) {
+                console.log("Firebase Init Error: Chạy chế độ Offline");
             }
-        };
+        }
 
-        onAuthStateChanged(auth, (u) => { user = u; });
-        initAuth();
+        const appId = 'math-quiz-9-v3';
 
         const quizData = [
             {
@@ -165,9 +165,9 @@
             },
             {
                 q: "Nhẩm nghiệm của phương trình 2x² - 3x + 1 = 0.",
-                options: ["x₁ = 1; x₂ = 2", "x₁ = 1; x₂ = 0.5", "x₁ = -1; x₂ = -0.5", "x₁ = 1; x₂ = -0.5"],
+                options: ["x₁ = 1; x₂ = 2", "x₁ = 1; x₂ = 0,5", "x₁ = -1; x₂ = -0,5", "x₁ = 1; x₂ = -0,5"],
                 correct: 1,
-                exp: "Ta thấy a + b + c = 2 + (-3) + 1 = 0 nên x₁ = 1 và x₂ = c/a = 1/2 = 0.5."
+                exp: "Ta thấy a + b + c = 2 + (-3) + 1 = 0 nên x₁ = 1 và x₂ = c/a = 1/2 = 0,5."
             },
             {
                 q: "Một khu vườn hình chữ nhật có chiều dài hơn chiều rộng 5m và diện tích bằng 150m². Gọi x (m) là chiều rộng. Phương trình của bài toán là:",
@@ -217,7 +217,7 @@
         const $ = (id) => document.getElementById(id);
 
         async function saveScore() {
-            if (!user) return;
+            if (!isOnline || !db) return;
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
                 await addDoc(colRef, {
@@ -226,11 +226,11 @@
                     score: score,
                     timestamp: new Date().getTime()
                 });
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Lưu điểm thất bại:", err); }
         }
 
         async function loadLeaderboard() {
-            if (!user) return;
+            if (!isOnline || !db) return;
             try {
                 const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
                 const snapshot = await getDocs(colRef);
@@ -256,7 +256,7 @@
                         <div class="font-bold text-blue-600">${s.score}/10</div>
                     </div>
                 `).join('');
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Tải bảng xếp hạng thất bại:", err); }
         }
 
         function startTimer() {
@@ -292,7 +292,7 @@
             data.options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'btn-option w-full p-4 rounded-xl text-left font-semibold';
-                btn.innerText = opt; // Hiện tại dùng dấu chấm cho thập phân
+                btn.innerText = opt;
                 btn.onclick = () => handleAnswer(idx);
                 container.appendChild(btn);
             });
@@ -323,7 +323,7 @@
                 if (selectedIdx !== -1) buttons[selectedIdx].classList.add('wrong');
                 msg.innerText = selectedIdx === -1 ? "Hết thời gian mất rồi!" : "Chưa đúng rồi!";
                 msg.className = "font-bold mb-1 text-red-500";
-                exp.innerText = "";
+                exp.innerText = "Đáp án đúng là: " + data.options[data.correct];
             }
             $('btn-next').classList.remove('hidden');
         }
@@ -340,7 +340,9 @@
             else comment = "Đừng nản chí! Hãy xem lại các công thức và thử lại nào. 💪";
             
             $('result-comment').innerText = comment;
-            saveScore().then(loadLeaderboard);
+            if(isOnline) {
+                saveScore().then(loadLeaderboard);
+            }
         }
 
         $('btn-start').onclick = () => {
