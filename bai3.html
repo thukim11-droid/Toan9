@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu Trường Toán 9 - Phương trình bậc hai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* RESET & BASE */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* RESPONSIVE CONTAINER */
+        .slide-container {
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+            background-color: #ffffff;
+            position: relative;
+            display: none;
+            flex-direction: column;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+        }
+
+        .slide-container.active { display: flex; }
+
+        /* DECORATION */
+        .bg-decoration {
+            position: absolute;
+            z-index: 0;
+            filter: blur(60px);
+            opacity: 0.3;
+        }
+        .blob-1 { width: 300px; height: 300px; background: #dcfd8b; top: -50px; right: -50px; border-radius: 50%; }
+        .blob-2 { width: 250px; height: 250px; background: #bc84ee; bottom: -50px; left: -50px; border-radius: 50%; }
+
+        .slide-container > * { position: relative; z-index: 1; }
+
+        /* TYPOGRAPHY */
+        h1, h2 { font-family: 'Comfortaa', cursive; color: #1e293b; }
+        .slide-title { font-size: 36px; margin-bottom: 30px; border-left: 6px solid #3b82f6; padding-left: 20px; }
+        .question-text { font-size: 26px; font-weight: 700; line-height: 1.4; color: #334155; margin-bottom: 30px; }
+
+        /* COMPONENTS */
+        .input-group { width: 100%; max-width: 400px; margin: 0 auto 15px; text-align: left; }
+        .input-group label { display: block; font-weight: 700; margin-bottom: 6px; color: #64748b; font-size: 13px; text-transform: uppercase; }
+        .styled-input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .styled-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 20px -5px rgba(59, 130, 246, 0.4); }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+        @media (max-width: 640px) { .options-grid { grid-template-columns: 1fr; } }
+        
+        .option-btn {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 18px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) { border-color: #3b82f6; background-color: #eff6ff; }
+        .option-btn.correct { background-color: #f0fdf4 !important; border-color: #22c55e !important; color: #15803d; }
+        .option-btn.wrong { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #b91c1c; }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .timer-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* RESULT STYLES */
+        .result-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; }
+        @media (max-width: 850px) { .result-layout { grid-template-columns: 1fr; } }
+        
+        .result-card {
+            background: #eff6ff;
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+        }
+        .leaderboard-container {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            padding: 30px;
+        }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th { text-align: left; color: #64748b; font-size: 13px; padding-bottom: 10px; text-transform: uppercase; }
+        .leaderboard-table td { padding: 10px 0; border-top: 1px solid #f1f5f9; font-size: 16px; }
+
+        /* START SLIDE OPTIMIZATION */
+        .start-layout { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .start-image { width: 160px; height: auto; margin-bottom: 20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+    </style>
+</head>
+<body>
+
+    <!-- SLIDE 1: TRANG BẮT ĐẦU -->
+    <div class="slide-container active" id="slide-start">
+        <div class="bg-decoration blob-1"></div>
+        <div class="bg-decoration blob-2"></div>
+        <div class="start-layout">
+            <img src="https://cdn-icons-png.flaticon.com/512/3426/3426651.png" alt="Math" class="start-image">
+            <h1 style="font-size: 48px; color: #3b82f6; margin-bottom: 8px;">Đấu Trường Toán 9</h1>
+            <p style="font-size: 18px; color: #64748b; margin-bottom: 30px; font-weight: 600;">Chương: Phương trình bậc hai & Định lý Viète</p>
+            
+            <div class="input-group">
+                <label>Họ và tên học sinh</label>
+                <input type="text" id="input-name" class="styled-input" placeholder="Ví dụ: Nguyễn Văn A">
+            </div>
+            <div class="input-group">
+                <label>Lớp</label>
+                <input type="text" id="input-class" class="styled-input" placeholder="Ví dụ: 9A1">
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn-primary" onclick="startQuiz()">
+                    BẮT ĐẦU CHƠI <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE CÂU HỎI -->
+    <div class="slide-container" id="slide-quiz">
+        <div class="bg-decoration blob-1" style="width: 150px; height: 150px;"></div>
+        <div class="timer-bar-container">
+            <div class="timer-bar-fill" id="timer-bar"></div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 id="question-header" style="font-size: 20px; color: #3b82f6;">Câu hỏi 1/10</h2>
+            <div id="countdown-text" style="font-size: 22px; font-weight: 700; color: #64748b;">40s</div>
+        </div>
+
+        <div class="question-text" id="question-content">Đang tải câu hỏi...</div>
+
+        <div class="options-grid" id="options-container"></div>
+
+        <div class="feedback-box" id="feedback-area">
+            <h3 id="feedback-status" style="font-size: 24px; margin-bottom: 8px;">Chính xác!</h3>
+            <p id="feedback-exp" style="font-size: 18px; color: #475569;"></p>
+        </div>
+
+        <div style="margin-top: auto; display: flex; justify-content: flex-end; padding-top: 20px;">
+            <button class="btn-primary" id="btn-next" style="display: none;" onclick="nextQuestion()">
+                TIẾP THEO <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- SLIDE KẾT QUẢ -->
+    <div class="slide-container" id="slide-result">
+        <div class="bg-decoration blob-1"></div>
+        <h2 class="slide-title">Kết Quả Chung Cuộc</h2>
+        
+        <div class="result-layout">
+            <div>
+                <div class="result-card">
+                    <p style="font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Thành tích</p>
+                    <h3 id="res-name" style="font-size: 30px; margin-bottom: 2px;">Tên Học Sinh</h3>
+                    <p id="res-class" style="font-size: 18px; color: #3b82f6; margin-bottom: 25px; font-weight: 700;">Lớp: 9A1</p>
+                    
+                    <div style="font-size: 70px; font-weight: 900; color: #1e293b; line-height: 1;" id="res-score">0/10</div>
+                    <p id="res-comment" style="font-size: 18px; font-style: italic; margin-top: 15px; color: #475569;">Nhận xét...</p>
+                </div>
+                <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="location.reload()">
+                    CHƠI LẠI <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+
+            <div class="leaderboard-container">
+                <h3 style="font-size: 22px; margin-bottom: 15px;"><i class="fa-solid fa-trophy" style="color: #f59e0b;"></i> Bảng Xếp Hạng</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Tên</th>
+                                <th>Lớp</th>
+                                <th>Điểm</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIG & DB
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'math9-quiz-final';
+
+        let user = null;
+        onAuthStateChanged(auth, u => user = u);
+        signInAnonymously(auth);
+
+        // DATA
+        const questions = [
+            {
+                q: "Phương trình nào dưới đây là phương trình bậc hai một ẩn?",
+                options: ["2x + 1 = 0", "x² - 5x + 6 = 0", "x³ + x² - 1 = 0", "0x² + 3x - 2 = 0"],
+                correct: 1,
+                exp: "Phương trình bậc hai một ẩn có dạng ax² + bx + c = 0 với a ≠ 0."
+            },
+            {
+                q: "Tìm tập nghiệm của phương trình x² - 5x + 6 = 0.",
+                options: ["S = {1; 6}", "S = {2; 3}", "S = {-2; -3}", "S = {-1; -6}"],
+                correct: 1,
+                exp: "Ta có Δ = (-5)² - 4.1.6 = 25 - 24 = 1 > 0. Nghiệm x = 2, x = 3."
+            },
+            {
+                q: "Cho phương trình 3x² - 8x + 4 = 0. Tổng hai nghiệm (x₁ + x₂) là:",
+                options: ["8/3", "-8/3", "4/3", "8"],
+                correct: 0,
+                exp: "Theo định lý Viète: x₁ + x₂ = -b/a = -(-8)/3 = 8/3."
+            },
+            {
+                q: "Nhẩm nghiệm của phương trình 2x² - 3x + 1 = 0.",
+                options: ["x₁ = 1; x₂ = 2", "x₁ = 1; x₂ = 0.5", "x₁ = -1; x₂ = -0.5", "x₁ = 1; x₂ = -0.5"],
+                correct: 1,
+                exp: "Ta thấy a + b + c = 2 - 3 + 1 = 0 nên x₁ = 1 và x₂ = c/a = 1/2 = 0.5."
+            },
+            {
+                q: "Một khu vườn hình chữ nhật có chiều dài hơn chiều rộng 5m và diện tích bằng 150m². Gọi x (m) là chiều rộng. Phương trình của bài toán là:",
+                options: ["x² + 5x + 150 = 0", "x² + 5x - 150 = 0", "x² - 5x - 150 = 0", "2x + 5 = 150"],
+                correct: 1,
+                exp: "Chiều rộng x, chiều dài x + 5. Diện tích x(x + 5) = 150 ⇔ x² + 5x - 150 = 0."
+            },
+            {
+                q: "Tìm phương trình bậc hai nhận u = 9 và v = 10 làm nghiệm.",
+                options: ["x² + 19x + 90 = 0", "x² - 90x + 19 = 0", "x² - 19x + 90 = 0", "x² - 19x - 90 = 0"],
+                correct: 2,
+                exp: "Phương trình: x² - (u+v)x + uv = 0 ⇔ x² - 19x + 90 = 0."
+            },
+            {
+                q: "Tìm hai số tự nhiên biết tổng của chúng bằng 12 và tích của chúng bằng 35.",
+                options: ["5 và 7", "4 và 8", "3 và 9", "6 và 6"],
+                correct: 0,
+                exp: "Hai số là nghiệm của t² - 12t + 35 = 0. Nghiệm là 5 và 7."
+            },
+            {
+                q: "Tích của hai số tự nhiên liên tiếp là 156. Gọi số bé là x. Phương trình mô tả bài toán là:",
+                options: ["x² + x + 156 = 0", "x² + x - 156 = 0", "x² + 2x - 156 = 0", "x² - x + 156 = 0"],
+                correct: 1,
+                exp: "Hai số là x và x + 1. Tích x(x + 1) = 156 ⇔ x² + x - 156 = 0."
+            },
+            {
+                q: "Điều kiện để phương trình ax² + bx + c = 0 (a ≠ 0) có hai nghiệm trái dấu là:",
+                options: ["Δ > 0", "a.c > 0", "a.c < 0", "b = 0"],
+                correct: 2,
+                exp: "Hai nghiệm trái dấu khi x₁.x₂ = c/a < 0, tức là a.c < 0."
+            },
+            {
+                q: "Cho phương trình x² - 4x + 1 = 0. Giá trị của biểu thức A = x₁² + x₂² là:",
+                options: ["14", "16", "18", "12"],
+                correct: 0,
+                exp: "A = (x₁+x₂)² - 2x₁x₂ = 4² - 2(1) = 16 - 2 = 14."
+            }
+        ];
+
+        // STATE
+        let currentIdx = 0;
+        let score = 0;
+        let userName = "";
+        let userClass = "";
+        let timer;
+        let timeLeft = 40;
+
+        // FUNCTIONS
+        window.startQuiz = () => {
+            userName = document.getElementById('input-name').value.trim();
+            userClass = document.getElementById('input-class').value.trim();
+            if(!userName || !userClass) { alert("Vui lòng nhập đầy đủ Tên và Lớp!"); return; }
+            document.getElementById('slide-start').classList.remove('active');
+            document.getElementById('slide-quiz').classList.add('active');
+            loadQuestion();
+        };
+
+        function loadQuestion() {
+            const data = questions[currentIdx];
+            document.getElementById('question-header').innerText = `Câu hỏi ${currentIdx + 1}/10`;
+            document.getElementById('question-content').innerText = data.q;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(idx);
+                container.appendChild(btn);
+            });
+            document.getElementById('feedback-area').style.display = 'none';
+            document.getElementById('btn-next').style.display = 'none';
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = 40;
+            updateTimerUI();
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if(timeLeft <= 0) { clearInterval(timer); selectOption(-1); }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('countdown-text').innerText = `${timeLeft}s`;
+            document.getElementById('timer-bar').style.width = `${(timeLeft / 40) * 100}%`;
+            document.getElementById('timer-bar').style.background = timeLeft <= 10 ? '#ef4444' : 'linear-gradient(90deg, #3b82f6, #60a5fa)';
+        }
+
+        function selectOption(idx) {
+            clearInterval(timer);
+            const data = questions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+            const feedbackArea = document.getElementById('feedback-area');
+            const status = document.getElementById('feedback-status');
+            const exp = document.getElementById('feedback-exp');
+            feedbackArea.style.display = 'block';
+            if(idx === data.correct) {
+                score++;
+                btns[idx].classList.add('correct');
+                status.innerText = "Chính xác! ✨";
+                status.style.color = "#22c55e";
+                exp.innerText = data.exp;
+            } else {
+                if(idx !== -1) btns[idx].classList.add('wrong');
+                status.innerText = idx === -1 ? "Hết thời gian! ⏰" : "Chưa đúng rồi! 💡";
+                status.style.color = "#ef4444";
+                exp.innerText = "";
+            }
+            document.getElementById('btn-next').style.display = 'block';
+        }
+
+        window.nextQuestion = () => {
+            currentIdx++;
+            if(currentIdx < questions.length) loadQuestion();
+            else showResults();
+        };
+
+        async function showResults() {
+            document.getElementById('slide-quiz').classList.remove('active');
+            document.getElementById('slide-result').classList.add('active');
+            document.getElementById('res-name').innerText = userName;
+            document.getElementById('res-class').innerText = `Lớp: ${userClass}`;
+            document.getElementById('res-score').innerText = `${score}/10`;
+            let comment = score === 10 ? "Xuất sắc! Bạn là thiên tài!" : score >= 8 ? "Rất tốt! Cố gắng phát huy nhé." : score >= 5 ? "Khá tốt! Ôn tập thêm nhé." : "Cần cố gắng hơn nữa!";
+            document.getElementById('res-comment').innerText = comment;
+
+            if(user) {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+                await addDoc(colRef, { name: userName, class: userClass, score: score, ts: Date.now() });
+                loadLeaderboard();
+            }
+        }
+
+        async function loadLeaderboard() {
+            if(!user) return;
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+            const snap = await getDocs(colRef);
+            const data = [];
+            snap.forEach(d => data.push(d.data()));
+            data.sort((a,b) => b.score - a.score || a.ts - b.ts);
+            const body = document.getElementById('leaderboard-body');
+            body.innerHTML = data.slice(0, 10).map((p, i) => `
+                <tr>
+                    <td style="font-weight: 700;">${i+1}</td>
+                    <td>${p.name}</td>
+                    <td>${p.class}</td>
+                    <td style="font-weight: 700; color: #3b82f6;">${p.score}/10</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
